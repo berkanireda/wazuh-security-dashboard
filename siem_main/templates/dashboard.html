@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% load static %}
+
+
+
+{% block content %}
+
+<div class="container-fluid" id="container-print">
+    <div class="d-sm-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-dark mb-0">Dashboard</h3><a onclick="window.print()" class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="#"><i class="fas fa-print fa-lg text-white-50 m-2"></i> print</a>
+    </div>
+
+    
+   
+    <div class="row">
+        <div class="col-md-6 col-xl-3 mb-4">
+            <div class="card shadow border-start-primary py-2">
+                <div class="card-body">
+                    <div class="row align-items-center no-gutters">
+                        <div class="col me-2">
+                            <div class="text-uppercase text-primary fw-bold text-xs mb-1"><span>Nombre d'attaques cette semaine</span></div>
+                            <div class="text-dark fw-bold h5 mb-0"><span>{{nb_attaques}}</span></div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3 mb-4">
+            <div class="card shadow border-start-success py-2">
+                <div class="card-body">
+                    <div class="row align-items-center no-gutters">
+                        <div class="col me-2">
+                            <div class="text-uppercase text-success fw-bold text-xs mb-1"><span>Attaques critiques</span></div> 
+                            <div class="text-dark fw-bold h5 mb-0"><span>{{specific_attacks_count}}</span></div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+       
+    </div>
+    <div class="row">
+        <div class="col-lg-4 col-xl-4">
+            <div class="card shadow mb-4">
+                    
+                <div class="card-body">
+                    <div class="mb-4 text-dark h4">Degré de gravité des attaques</div>
+                    <canvas height="315" width="324" id="personnesChart" style="display: block; height: 419px; width: 249px;"></canvas>
+
+                    
+                    
+                </div>
+            </div> 
+         </div>   
+        
+        <div class="col-lg-7 col-xl-8">
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <canvas id="myfinalChart"></canvas>
+
+                        Start : <input id="start"type="date" min="2021-11-01" max="2029-11-03" value="2023-07-18"> End : <input id="end" type="date" min="2021-11-04" max="2029-11-07" value="2023-07-23"> <button onClick="filterDate()"> Filter</button>
+                </div>
+             
+        </div>
+
+</div>
+    <div class="row">
+        <div class="col-lg-7 col-xl-8">
+            <div class="card shadow mb-4">
+                
+                <div class="card-body">
+                   
+                   <div>
+                    <div class="my-4 text-dark h3">Attaques par jour</div>
+                    
+                </div>
+            
+                
+               
+                
+                   <div style="width: 80%; margin: auto;">
+                    <canvas id="stackedBarChart"></canvas>
+                </div>
+            
+    
+                    
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="col-lg-5 col-xl-4">
+             
+            
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <div style="width: 80%; margin: auto;">
+                        <div class="mb-4 text-dark h4">Serveurs ciblés</div>
+                        <canvas id="doughnutChart"></canvas>
+                        
+                    </div>
+                </div>
+            </div>
+                
+                <script>
+
+
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const server_pool_data = {{ server_pool | safe }};
+                        const ctx = document.getElementById('doughnutChart').getContext('2d');
+            
+                        new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: server_pool_data.labels,
+                                datasets: [{
+                                    data: server_pool_data.values,
+                                    backgroundColor: server_pool_data.colors,
+                                }]
+                            },
+                            options: {
+                                title: {
+                                    display: true,
+                                    text: "Serveurs ciblés"
+                                  }
+                            }
+                        });
+                    });
+
+
+                    
+                    
+
+
+
+
+
+                    var xValues = [];
+                  
+                        {%for type in types%}
+                        xValues.push("{{type.type}}")
+                        {%endfor%}
+                     
+                    var yValues = [];
+                
+                        {%for type in types%}
+                        yValues.push({{type.nombrePlace}})
+                        {%endfor%}
+                     
+                    
+                    var barColors = ["red", "#004089","#FFFF00","#ADD8E6","#800080"];
+                    {%for type in types%}
+                        barColors.push("black")
+                        {%endfor%}
+                    
+                    new Chart("myChart", {
+                      type: "bar",
+                      data: {
+                        labels: xValues,
+                        datasets: [{
+                          backgroundColor: barColors,
+                          data: yValues
+                        }]
+                      },
+                      options: {
+                        legend: {display: false},
+                        
+                        scales: {
+                            xValues: [{
+                                ticks: {
+                                    beginAtZero: true
+                                }
+                            }]
+                        }
+                      }
+                    });
+
+                  
+
+                    
+
+                    var xValues1 = ["Severe", "Informationnel", "Modéré", "Faible", "important"];
+                  
+                   
+                 
+                    var yValues1 = ["{{threat_level.Severe}}", "{{threat_level.Informational}}", "{{threat_level.moderate}}", "{{threat_level.Low}}", "{{threat_level.Substantial}}"];
+            
+                
+
+                    new Chart("personnesChart", {
+                        type: "pie",
+                        data: {
+                          labels: xValues1,
+                          datasets: [{
+                            backgroundColor: barColors,
+                            data: yValues1
+                          }]
+                        },
+                        options: {
+                          title: {
+                            display: true,
+                            text: "Degré de gravité"
+                          }
+                        }
+                      });
+
+
+                     
+                      const tester = {{test | safe}};
+                      const values2 = {{sub_types | safe}}
+
+                      const values1 = [ '"Known Exploits"',  '"Generic Attacks"', '"SQL Injection"', '"Embedded Queries SQL Injection"', '"Stacked Queries SQL Injection"', '"SQL Function Based Boolean Injection"', '"Cross Site Scripting"'];
+
+                      var intersectionArray = values1.filter(function(value) {
+                        return values2.includes(value);
+                    });
+                 
+                      const data1 = {{ bar_data | safe }};
+                        let daysOfWeek1 = Object.keys(data1);
+                      const dates = daysOfWeek1;
+                      
+                      const convertedDates = dates.map(date => new Date(date).setHours(0,0,0,0));
+                      function getRandomColor() {
+                        const letters = '0123456789ABCDEF';
+                        let color = '#';
+                        for (let i = 0; i < 6; i++) {
+                            color += letters[Math.floor(Math.random() * 16)];
+                        }
+                        return color;
+                    }
+                      let datasets1 = intersectionArray.map(value1 => ({
+                        label: value1,
+                        data: daysOfWeek1.map(day => data1[day][value1]),
+                        backgroundColor: getRandomColor(),
+                        
+                        borderWidth: 1
+                    }));
+                    
+                      const data = {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: datasets1,
+                      };
+
+
+                  
+                    
+                      const config = {
+                        type: 'bar',
+                        data,
+                        options: {
+                          scales: {
+                              x :{type : 'time', time : {unit: 'day'}},
+                            y: {
+                              beginAtZero: true
+                            }
+                          }
+                        }
+                      };
+                  
+                     
+                      
+                      const myfinalChart = new Chart(
+                        document.getElementById('myfinalChart'),
+                        config
+                      );
+                  
+                      function filterDate(){
+                        console.log(daysOfWeek1)
+                          const start1 = new Date(document.getElementById('start').value);
+                          const start = start1.setHours(0,0,0,0);
+                          const end1 = new Date(document.getElementById('end').value);
+                          const end = end1.setHours(0,0,0,0);
+                  
+                          const filterDates = convertedDates.filter(date => date >= start && date <= end);
+                          myfinalChart.config.data.labels = filterDates;
+                          myfinalChart.update();
+                  
+                      };
+                  
+                      
+
+                  
+                      var processedData = {{ chart_data|safe }};
+                      
+                  
+               
+                    
+                    var threatLevels = Array.from(new Set(Object.values(processedData).flatMap(Object.keys)));
+
+                    // Initialize an object to store the rearranged data
+                    var rearrangedData = {};
+
+                    // Loop through each threat level
+                    for (var i = 0; i < threatLevels.length; i++) {
+                    var threatLevel = threatLevels[i];
+                    rearrangedData[threatLevel] = [];
+
+                    // Loop through the days of the week and populate the list
+                    for (var dayOfWeek in processedData) {
+                        var count = processedData[dayOfWeek][threatLevel] || 0;
+                        rearrangedData[threatLevel].push(count);
+                    }
+                    }
+
+                    // The rearrangedData object now contains lists for each threat level
+                    
+                    var config3 = {
+                        type: 'bar',
+                        data: {
+                           labels: Object.keys(processedData), // Days of the week
+                           datasets: [{
+                            label: 'Low',
+                            data: rearrangedData['Low'],
+                            backgroundColor: '#ADD8E6', // Color for Low threat level
+                         },
+                         {
+                            label: 'Informational',
+                            data: rearrangedData['Informational'],
+                            backgroundColor: '#004089', // Color for High threat level
+                         }, {
+                            label: 'Moderate',
+                            data: rearrangedData['Moderate'],
+                            backgroundColor: '#FFFF00', // Color for Medium threat level
+                         },
+                         {
+                            label: 'Severe',
+                            data: rearrangedData['Severe'],
+                            backgroundColor: '#FF0000', // Color for High threat level
+                         },
+                         {
+                            label: 'Substantial',
+                            data: rearrangedData['Substantial'],
+                            backgroundColor: '#800080', // Color for High threat level
+                         }] // Initialize datasets array
+                        },
+                        options: {
+                           scales: {
+                              x: { stacked: true },
+                              y: { stacked: true }
+                           }
+                        }
+                     };
+
+
+                  
+
+                    var ctx = document.getElementById("stackedBarChart").getContext("2d");
+                    
+                    var stackedBarChart = new Chart(ctx, config3);
+
+
+                      
+
+                      
+
+                     
+
+
+                      
+                    </script>
+                    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+            
+            {% comment %} <div class="card shadow mb-4">
+               
+                <div class="card-body">
+                    <h4 class="small fw-bold">Capacité<span class="float-end">{{avions|length}}%</span></h4>
+                    <div class="progress mb-4">
+                        <div class="progress-bar bg-danger" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: {{avions|length}}%;"><span class="visually-hidden">{{avions|length}}%</span></div>
+                    </div>
+                   
+                </div>
+            </div> {% endcomment %}
+            
+        </div>
+        
+    </div>
+
+  
+
+  
+</div>
+
+
+
+{% endblock%}
