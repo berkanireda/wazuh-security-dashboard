@@ -1,0 +1,33 @@
+#sidebar-custom {
+  background-color: rgba(255,91,102,0.37) !important;
+}
+
+#button-custom {
+  background-color: #ff5b66;
+}
+
+.text-custom {
+  font-size: 16px;
+  color : black !important;
+}
+
+#icon-custom {
+  font-size: 20px;
+  margin-right: 10%;
+}
+
+#navbar-custom {
+  background-color: #ff5b66 !important;
+}
+
+#image-custom {
+  max-width: 100%;
+  height: auto;
+}
+
+
+
+
+
+
+
